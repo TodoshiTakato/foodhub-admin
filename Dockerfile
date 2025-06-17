@@ -5,11 +5,14 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies as root first
 RUN npm install
 
-# Copy source code
+# Copy source code  
 COPY . .
+
+# Switch to node user (UID 1000) 
+USER node
 
 # Expose port
 EXPOSE 5173
