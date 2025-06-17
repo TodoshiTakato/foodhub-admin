@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  admin:
+    build: .
+    ports:
+      - "3000:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost/api/v1
+      - VITE_WS_URL=http://localhost:6001
+      - VITE_APP_NAME=FoodHub Admin
+    networks:
+      - foodhub-network
+
+networks:
+  foodhub-network:
+    external: true
+    name: foodhub_foodhub-network
+
