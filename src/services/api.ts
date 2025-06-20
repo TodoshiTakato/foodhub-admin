@@ -72,6 +72,7 @@ class ApiService {
               break;
             case 500:
               toast.error('Server error. Please try again later.');
+              console.error('Server error (500):', error.config?.url, data);
               break;
             default:
               toast.error(data.message || 'An error occurred');

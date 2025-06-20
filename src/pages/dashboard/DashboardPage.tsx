@@ -8,6 +8,8 @@ const DashboardPage: React.FC = () => {
   const { data: dashboardStats, isLoading: statsLoading, error: statsError } = useDashboardStats();
   const { data: topProducts, isLoading: productsLoading } = useTopProducts({ limit: 5 });
 
+
+
   // Show loading spinner while main data is loading
   if (statsLoading) {
     return <LoadingSpinner />;

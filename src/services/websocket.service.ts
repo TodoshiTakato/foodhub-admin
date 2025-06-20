@@ -14,6 +14,7 @@ class WebSocketService {
   private eventHandlers: Map<keyof WebSocketEvents, Function[]> = new Map();
   private connected = false;
   private restaurantChannel: any = null;
+  private ordersChannel: any = null;
 
   constructor() {
     console.log('🔌 WebSocket service initialized with Soketi/Pusher');
@@ -22,14 +23,30 @@ class WebSocketService {
 
   private connect() {
     try {
-      // Конфигурация для подключения к Soketi
-      this.pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY || 'foodhub-app', {
+      // Конфигурация для подключения к Soketi с правильными настройками
+      console.log('🔌 Attempting to connect to:', {
+        host: import.meta.env.VITE_PUSHER_HOST || 'localhost',
+        port: import.meta.env.VITE_PUSHER_PORT || '6001',
+        key: import.meta.env.VITE_PUSHER_APP_KEY || 'app-key'
+      });
+
+      this.pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY || 'app-key', {
         wsHost: import.meta.env.VITE_PUSHER_HOST || 'localhost',
         wsPort: parseInt(import.meta.env.VITE_PUSHER_PORT) || 6001,
         wssPort: parseInt(import.meta.env.VITE_PUSHER_PORT) || 6001,
         forceTLS: false,
-        enabledTransports: ['ws', 'wss'],
+        enabledTransports: ['ws'],
         cluster: '',
+        // Настройки для стабильности
+        disableStats: true,
+        enableLogging: false,
+        // Временно убираем авторизацию для тестирования
+        // authEndpoint: '/broadcasting/auth',
+        // auth: {
+        //   headers: {
+        //     'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || '')
+        //   }
+        // }
       });
 
       this.pusher.connection.bind('connected', () => {
@@ -47,6 +64,11 @@ class WebSocketService {
       this.pusher.connection.bind('error', (error: any) => {
         console.error('❌ Soketi connection error:', error);
         toast.error('🔌 WebSocket connection error');
+      });
+
+      // Добавляем обработчик состояний подключения
+      this.pusher.connection.bind('state_change', (states: any) => {
+        console.log(`🔄 WebSocket state: ${states.previous} → ${states.current}`);
       });
 
     } catch (error) {
@@ -91,20 +113,21 @@ class WebSocketService {
     if (!this.pusher) return;
 
     try {
-      // Подписываемся на канал ресторана
+      // Временно используем публичные каналы для тестирования (без private-)
       this.restaurantChannel = this.pusher.subscribe(`restaurant.${restaurantId}`);
+      this.ordersChannel = this.pusher.subscribe('orders');
       
-      // Слушаем события заказов
-      this.restaurantChannel.bind('new_order', (data: Order) => {
+      // Слушаем события заказов с правильными названиями от бэкенда
+      this.restaurantChannel.bind('order.created', (data: any) => {
         console.log('📦 New order received:', data);
-        this.emit('new_order', data);
-        toast.success(`🆕 New order #${data.order_number}`);
+        this.emit('new_order', data.order);  // передаем data.order, не data
+        toast.success(`🆕 New order #${data.order.order_number}`);
       });
 
-      this.restaurantChannel.bind('order_status_changed', (data: any) => {
+      this.restaurantChannel.bind('order.status.changed', (data: any) => {
         console.log('📝 Order status changed:', data);
         this.emit('order_status_changed', data);
-        toast.info(`📝 Order #${data.order.order_number} is now ${data.status}`);
+        toast.info(`📝 Order #${data.order.order_number}: ${data.order.old_status} → ${data.order.new_status}`);
       });
 
       this.restaurantChannel.bind('kitchen_update', (data: any) => {
@@ -125,10 +148,21 @@ class WebSocketService {
         }
       });
 
-      console.log(`🏠 Joined restaurant channel: restaurant.${restaurantId}`);
+      // Подписываемся также на общий канал заказов
+      this.ordersChannel.bind('order.created', (data: any) => {
+        console.log('📦 Order created (general channel):', data);
+        this.emit('new_order', data.order);
+      });
+      
+      this.ordersChannel.bind('order.status.changed', (data: any) => {
+        console.log('📝 Order status changed (general channel):', data);
+        this.emit('order_status_changed', data);
+      });
+
+      console.log(`🏠 Joined restaurant channels: restaurant.${restaurantId}, orders`);
       
     } catch (error) {
-      console.error('❌ Failed to join restaurant channel:', error);
+      console.error('❌ Failed to join restaurant channels:', error);
     }
   }
 
@@ -137,6 +171,11 @@ class WebSocketService {
       this.pusher?.unsubscribe(`restaurant.${restaurantId}`);
       this.restaurantChannel = null;
       console.log(`🚪 Left restaurant channel: restaurant.${restaurantId}`);
+    }
+    if (this.ordersChannel) {
+      this.pusher?.unsubscribe('orders');
+      this.ordersChannel = null;
+      console.log(`🚪 Left orders channel: orders`);
     }
   }
 
@@ -159,7 +198,9 @@ class WebSocketService {
     this.connected = false;
     this.eventHandlers.clear();
     this.restaurantChannel = null;
+    this.ordersChannel = null;
     console.log('🔌 WebSocket disconnected');
+    toast.error('🔌 WebSocket disconnected');
   }
 
   // Reconnect manually
@@ -195,6 +236,34 @@ class WebSocketService {
       type: 'info',
       message: 'Demo notification from WebSocket service'
     });
+  }
+
+  // Тестирование подписки на каналы
+  testChannelSubscription() {
+    if (!this.pusher || !this.connected) {
+      console.warn('⚠️ WebSocket not connected, cannot test channels');
+      toast.error('WebSocket not connected');
+      return;
+    }
+
+    // Тестируем подписку на тестовый канал
+    const testChannel = this.pusher.subscribe('test-channel');
+    
+    testChannel.bind('pusher:subscription_succeeded', () => {
+      console.log('✅ Successfully subscribed to test-channel');
+      toast.success('🎯 Test channel subscription successful!');
+    });
+
+    testChannel.bind('pusher:subscription_error', (error: any) => {
+      console.error('❌ Failed to subscribe to test-channel:', error);
+      toast.error('🎯 Test channel subscription failed!');
+    });
+
+    // Отписываемся через 5 секунд
+    setTimeout(() => {
+      this.pusher?.unsubscribe('test-channel');
+      console.log('🚪 Unsubscribed from test-channel');
+    }, 5000);
   }
 }
 

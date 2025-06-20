@@ -12,6 +12,14 @@ export const useDashboardStats = (params?: {
     {
       refetchInterval: 30000, // Refresh every 30 seconds
       staleTime: 15000, // Consider data stale after 15 seconds
+      retry: (failureCount, error: any) => {
+        // Don't retry for database errors (500 errors with SQL messages)
+        if (error?.response?.status === 500 && error?.response?.data?.message?.includes('SQLSTATE')) {
+          console.warn('Database error detected, stopping retries:', error?.response?.data?.message);
+          return false;
+        }
+        return failureCount < 3;
+      },
     }
   );
 };

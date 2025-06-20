@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (storedUser && token) {
         setUser(storedUser);
         
-        // Try to refresh user data from server
+        // Try to refresh user data from server with better error handling
         try {
           const freshUserData = await authService.getProfile();
           setUser(freshUserData);
@@ -44,9 +44,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (freshUserData.restaurant_id) {
             websocketService.joinRestaurant(freshUserData.restaurant_id);
           }
-        } catch (error) {
-          console.warn('Failed to refresh user data:', error);
-          // Keep using stored user data if refresh fails
+        } catch (error: any) {
+          console.error('Failed to refresh user data:', error);
+          
+          // If it's an auth error (401/403), logout
+          if (error?.response?.status === 401 || error?.response?.status === 403) {
+            console.log('Auth token invalid, logging out...');
+            await logout();
+            return;
+          }
+          
+          // For other errors (500, network), keep using stored user data
+          console.warn('Server error, using cached user data:', error);
           if (storedUser.restaurant_id) {
             websocketService.joinRestaurant(storedUser.restaurant_id);
           }
@@ -54,8 +63,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error) {
       console.error('Auth initialization failed:', error);
-      // Clear invalid auth data
+      // Clear invalid auth data only for auth errors
+      if (error instanceof Error && (error.message.includes('401') || error.message.includes('403'))) {
       await logout();
+      }
     } finally {
       setIsLoading(false);
     }
@@ -117,12 +128,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const freshUserData = await authService.getProfile();
         setUser(freshUserData);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to refresh user:', error);
+      
       // If refresh fails due to auth error, logout
-      if (error instanceof Error && error.message.includes('401')) {
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        console.log('Auth error during refresh, logging out...');
         await logout();
+        return;
       }
+      
+      // For server errors, don't logout - just log the error
+      if (error?.response?.status >= 500) {
+        console.log('Server error during refresh, keeping current session');
+        return;
+      }
+      
       throw error;
     }
   };

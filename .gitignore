@@ -86,4 +86,7 @@ coverage/
 .dynamodb/
 
 # TernJS port file
-.tern-port 
+.tern-port
+
+# Cursor conversation files
+foodhub-cursor/ 

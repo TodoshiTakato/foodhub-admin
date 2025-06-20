@@ -1,21 +1,16 @@
 FROM node:18-alpine
 
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies as root first
-RUN npm install
-
-# Copy source code  
-COPY . .
-
-# Switch to node user (UID 1000) 
+# Переключаемся на пользователя node (UID 1000, как у ns на хосте)
 USER node
 
-# Expose port
-EXPOSE 5173
+# Создаем и устанавливаем рабочую директорию
+WORKDIR /home/node/app
 
-# Start development server with hot reload
+# Копируем весь проект
+COPY --chown=node:node . .
+
+# Устанавливаем зависимости
+RUN npm install
+
+# Запускаем development сервер с hot reload
 CMD ["npm", "run", "dev"] 

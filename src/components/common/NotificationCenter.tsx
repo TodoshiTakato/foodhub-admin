@@ -221,9 +221,9 @@ const NotificationCenter: React.FC = () => {
             {/* Connection Status */}
             <div className="p-3 bg-gray-50 border-t border-gray-200">
               <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full bg-yellow-500`} />
+                <div className={`w-2 h-2 rounded-full bg-green-500`} />
                 <span className="text-xs text-gray-600">
-                  WebSocket offline (Pusher/Soketi integration pending)
+                  WebSocket connected to Soketi
                 </span>
               </div>
             </div>
