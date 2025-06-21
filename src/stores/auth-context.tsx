@@ -35,6 +35,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (storedUser && token) {
         setUser(storedUser);
         
+        // Подключаем WebSocket только для авторизованных пользователей
+        websocketService.connect();
+        
         // Try to refresh user data from server with better error handling
         try {
           const freshUserData = await authService.getProfile();
@@ -78,13 +81,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const authResponse = await authService.login({ email, password });
       setUser(authResponse.user);
       
+      // Подключаем WebSocket после успешной авторизации
+      websocketService.connect();
+      
       // Join WebSocket room for restaurant if user has one
       if (authResponse.user.restaurant_id) {
         websocketService.joinRestaurant(authResponse.user.restaurant_id);
       }
-      
-      // Reconnect WebSocket with new token
-      websocketService.reconnect();
     } catch (error) {
       console.error('Login failed:', error);
       throw error;

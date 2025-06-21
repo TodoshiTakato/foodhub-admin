@@ -17,11 +17,11 @@ class WebSocketService {
   private ordersChannel: any = null;
 
   constructor() {
-    console.log('🔌 WebSocket service initialized with Soketi/Pusher');
-    this.connect();
+    console.log('🔌 WebSocket service initialized (not connected until login)');
+    // Не подключаемся автоматически - только после авторизации
   }
 
-  private connect() {
+  connect() {
     try {
       // Конфигурация для подключения к Soketi с правильными настройками
       console.log('🔌 Attempting to connect to:', {
@@ -39,7 +39,6 @@ class WebSocketService {
         cluster: '',
         // Настройки для стабильности
         disableStats: true,
-        enableLogging: false,
         // Временно убираем авторизацию для тестирования
         // authEndpoint: '/broadcasting/auth',
         // auth: {
@@ -127,13 +126,13 @@ class WebSocketService {
       this.restaurantChannel.bind('order.status.changed', (data: any) => {
         console.log('📝 Order status changed:', data);
         this.emit('order_status_changed', data);
-        toast.info(`📝 Order #${data.order.order_number}: ${data.order.old_status} → ${data.order.new_status}`);
+        toast(`📝 Order #${data.order.order_number}: ${data.order.old_status} → ${data.order.new_status}`);
       });
 
       this.restaurantChannel.bind('kitchen_update', (data: any) => {
         console.log('👨‍🍳 Kitchen update:', data);
         this.emit('kitchen_update', data);
-        toast.info(`👨‍🍳 ${data.message}`);
+        toast(`👨‍🍳 ${data.message}`);
       });
 
       this.restaurantChannel.bind('notification', (data: any) => {
@@ -200,7 +199,7 @@ class WebSocketService {
     this.restaurantChannel = null;
     this.ordersChannel = null;
     console.log('🔌 WebSocket disconnected');
-    toast.error('🔌 WebSocket disconnected');
+    // Убираем toast отсюда - он уже показывается в connection.bind('disconnected')
   }
 
   // Reconnect manually
