@@ -1,13 +1,16 @@
 FROM node:18-alpine
 
-# Переключаемся на пользователя node (UID 1000, как у ns на хосте)
-USER node
-
 # Создаем и устанавливаем рабочую директорию
 WORKDIR /home/node/app
 
-# Копируем весь проект
-COPY --chown=node:node . .
+# Копируем весь проект (сначала копируем как root)
+COPY . .
+
+# Меняем владельца файлов на пользователя node
+RUN chown -R node:node /home/node/app
+
+# Переключаемся на пользователя node
+USER node
 
 # Устанавливаем зависимости
 RUN npm install
