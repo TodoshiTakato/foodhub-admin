@@ -3,6 +3,7 @@ import Card from '../../components/common/Card';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { TrendingUp, Users, ShoppingCart, DollarSign } from 'lucide-react';
 import { useDashboardStats, useTopProducts } from '../../hooks/useDashboard';
+import { STATUS_CLASSES } from '../../utils/orderStatus';
 
 const DashboardPage: React.FC = () => {
   const { data: dashboardStats, isLoading: statsLoading, error: statsError } = useDashboardStats();
@@ -112,11 +113,7 @@ const DashboardPage: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-gray-900">${order.total}</p>
-                    <p className={`text-xs capitalize ${
-                      order.status === 'completed' ? 'text-green-600' :
-                      order.status === 'preparing' ? 'text-yellow-600' :
-                      order.status === 'pending' ? 'text-blue-600' : 'text-gray-600'
-                    }`}>
+                    <p className={`text-xs capitalize ${STATUS_CLASSES[order.status]}`}>
                       {order.status}
                     </p>
                   </div>

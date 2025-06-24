@@ -40,4 +40,6 @@
   .card {
     @apply bg-white rounded-lg shadow-sm border border-gray-200;
   }
+
+  /* Оставляем только базовые стили для совместимости */
 } 

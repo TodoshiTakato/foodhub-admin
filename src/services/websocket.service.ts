@@ -22,6 +22,12 @@ class WebSocketService {
   }
 
   connect() {
+    // Если уже подключены или в процессе подключения, не подключаемся повторно
+    if (this.connected || this.pusher) {
+      console.log('🔌 WebSocket already connected or connecting, skipping...');
+      return;
+    }
+
     try {
       // Конфигурация для подключения к Soketi с правильными настройками
       console.log('🔌 Attempting to connect to:', {

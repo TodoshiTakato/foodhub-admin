@@ -71,7 +71,7 @@ export interface Order {
   customer_name: string;
   customer_phone?: string;
   customer_email?: string;
-  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled';
   channel: string;
   total: number;
   currency: string;
