@@ -39,6 +39,11 @@ const UsersPage: React.FC = () => {
 
   const currentUserRole = currentUser ? getUserPrimaryRole(currentUser) : 'customer';
 
+  // Не рендерим ничего пока currentUser не загружен
+  if (!currentUser) {
+    return <LoadingSpinner />;
+  }
+
   const handleCreateUser = () => {
     setEditingUser(null);
     setShowUserModal(true);

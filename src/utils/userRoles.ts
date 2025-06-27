@@ -93,6 +93,10 @@ export const canUserCreateRole = (currentUserRole: UserRole, targetRole: UserRol
 };
 
 export const getAvailableRoles = (currentUserRole: UserRole): UserRole[] => {
+  if (!isValidRole(currentUserRole)) {
+    console.warn('Invalid role for available roles:', currentUserRole);
+    return []; // пустой массив для неизвестных ролей
+  }
   return ROLE_HIERARCHY[currentUserRole].canCreate;
 };
 
@@ -101,10 +105,18 @@ export const getRoleDisplayName = (role: UserRole): string => {
 };
 
 export const getRoleDescription = (role: UserRole): string => {
+  if (!isValidRole(role)) {
+    console.warn('Invalid role for description:', role);
+    return 'Unknown role';
+  }
   return ROLE_HIERARCHY[role].description;
 };
 
 export const getRoleColor = (role: UserRole): string => {
+  if (!isValidRole(role)) {
+    console.warn('Invalid role for color:', role);
+    return 'bg-gray-600 text-white'; // fallback color
+  }
   return ROLE_HIERARCHY[role].color;
 };
 
@@ -126,24 +138,46 @@ export const roleRequiresRestaurant = (role: UserRole): boolean => {
   return ['restaurant-owner', 'restaurant-manager', 'kitchen-staff', 'cashier'].includes(role);
 };
 
+// Проверить валидность роли
+export const isValidRole = (role: string): role is UserRole => {
+  return Object.keys(ROLE_HIERARCHY).includes(role);
+};
+
 // Получить главную роль пользователя (если их несколько)
 export const getUserPrimaryRole = (user: User): UserRole => {
+  // Проверяем основную роль пользователя
+  if (user.role && isValidRole(user.role)) {
+    return user.role;
+  }
+
+  // Если основная роль невалидна, проверяем массив ролей
   if (user.roles && user.roles.length > 0) {
-    // Сортируем роли по приоритету и берем самую высокую
     const sortedRoles = user.roles
-      .map(r => r.name as UserRole)
-      .filter(role => Object.keys(ROLE_HIERARCHY).includes(role))
+      .map(r => r.name)
+      .filter(isValidRole)
       .sort((a, b) => ROLE_HIERARCHY[a].priority - ROLE_HIERARCHY[b].priority);
     
-    return sortedRoles[0] || user.role;
+    if (sortedRoles.length > 0) {
+      return sortedRoles[0];
+    }
   }
-  return user.role;
+  
+  // Фоллбэк на customer если роль не найдена
+  console.warn('Invalid or missing user role, defaulting to customer:', user);
+  return 'customer';
 };
 
 // Проверка может ли пользователь редактировать другого пользователя
 export const canEditUser = (currentUser: User, targetUser: User): boolean => {
+  // Безопасное получение ролей с проверкой
   const currentRole = getUserPrimaryRole(currentUser);
   const targetRole = getUserPrimaryRole(targetUser);
+  
+  // Дополнительная проверка на валидность ролей
+  if (!isValidRole(currentRole) || !isValidRole(targetRole)) {
+    console.warn('Invalid roles detected:', { currentRole, targetRole });
+    return false;
+  }
   
   // Нельзя редактировать самого себя через этот интерфейс
   if (currentUser.id === targetUser.id) return false;
