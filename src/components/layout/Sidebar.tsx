@@ -6,14 +6,22 @@ import {
   Package, 
   Menu, 
   Settings,
-  Users
+  Users,
+  UserCog
 } from 'lucide-react';
 import { useAuth } from '../../stores/auth-context';
+
+interface NavigationItem {
+  name: string;
+  href: string;
+  icon: any;
+  roles?: string[];
+}
 
 const Sidebar: React.FC = () => {
   const { user } = useAuth();
 
-  const navigationItems = [
+  const navigationItems: NavigationItem[] = [
     {
       name: 'Dashboard',
       href: '/dashboard',
@@ -35,6 +43,12 @@ const Sidebar: React.FC = () => {
       icon: Menu,
     },
     {
+      name: 'Users',
+      href: '/users',
+      icon: UserCog,
+      roles: ['super-admin', 'admin', 'restaurant-owner'], // Только эти роли могут управлять пользователями
+    },
+    {
       name: 'Settings',
       href: '/settings',
       icon: Settings,
@@ -43,10 +57,17 @@ const Sidebar: React.FC = () => {
 
   // Filter navigation based on user role
   const filteredNavigation = navigationItems.filter(item => {
-    if (user?.role === 'staff') {
+    // Если у пункта меню есть ограничения по ролям
+    if (item.roles && user?.role) {
+      return item.roles.includes(user.role);
+    }
+    
+    // Для kitchen-staff показываем только Dashboard и Orders
+    if (user?.role === 'kitchen-staff') {
       return ['Dashboard', 'Orders'].includes(item.name);
     }
-    return true; // Admin and manager can see all
+    
+    return true; // Для остальных ролей показываем все пункты без ограничений
   });
 
   return (

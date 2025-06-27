@@ -102,12 +102,13 @@ const LoginPage: React.FC = () => {
             <p className="text-sm text-gray-600 mb-2">—— Demo Credentials ——</p>
             <p className="text-xs text-gray-500">
               <strong>Super Admin:</strong> admin@foodhub.com / admin123<br />
+              <strong>Admin:</strong> sysadmin@foodhub.com / sysadmin123<br />
               <strong>Restaurant Owner:</strong> owner@pizzapalace.com / owner123<br />
               <strong>Manager:</strong> manager@foodhub.com / manager123<br />
+              <strong>Cashier:</strong> cashier@foodhub.com / cashier123<br />
               <strong>Staff:</strong> staff@foodhub.com / staff123<br />
               <strong>Test User 1:</strong> testuser1@foodhub.com / test123<br />
-              <strong>Test User 2:</strong> testuser2@foodhub.com / test123<br />
-              <strong>API Test User:</strong> apitest@foodhub.com / api123
+              <strong>Test User 2:</strong> testuser2@foodhub.com / test123
             </p>
           </div>
         </Card>

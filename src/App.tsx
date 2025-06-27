@@ -9,6 +9,7 @@ import OrderDetailsPage from './pages/orders/OrderDetailsPage';
 import ProductsPage from './pages/products/ProductsPage';
 import ProductFormPage from './pages/products/ProductFormPage';
 import MenusPage from './pages/menus/MenusPage';
+import UsersPage from './pages/users/UsersPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import LoadingSpinner from './components/common/LoadingSpinner';
 
@@ -80,6 +81,9 @@ function App() {
 
           {/* Menus */}
           <Route path="menus" element={<MenusPage />} />
+
+          {/* Users */}
+          <Route path="users" element={<UsersPage />} />
 
           {/* Settings */}
           <Route path="settings" element={<SettingsPage />} />

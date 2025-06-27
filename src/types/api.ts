@@ -2,8 +2,18 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  role: 'admin' | 'manager' | 'staff';
+  phone?: string;
+  role: 'super-admin' | 'admin' | 'restaurant-owner' | 'restaurant-manager' | 'kitchen-staff' | 'cashier' | 'customer';
+  roles?: Array<{
+    id: number;
+    name: string;
+    display_name: string;
+  }>;
   restaurant_id?: number;
+  restaurant?: Restaurant;
+  status: 'active' | 'inactive' | 'suspended';
+  last_login_at?: string;
+  email_verified_at?: string;
   created_at: string;
   updated_at: string;
 }
